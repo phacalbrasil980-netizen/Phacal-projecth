@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Para Ester | B-612</title>
+    <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: #fcfbf9;
+            color: #1a1a1a;
+            font-family: 'Montserrat', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Canvas de Partículas Interativas */
+        #effects-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Ecrã de Entrada */
+        #intro-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.98);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            transition: opacity 0.8s ease, visibility 0.8s ease;
+        }
+
+        #intro-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .intro-title {
+            font-family: 'Alex Brush', cursive;
+            font-size: 5.5rem;
+            color: #1a1a1a;
+            margin-bottom: 5px;
+            text-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+        }
+
+        .intro-subtitle {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.15rem;
+            letter-spacing: 4px;
+            color: #777;
+            margin-bottom: 40px;
+            text-transform: uppercase;
+            font-style: italic;
+        }
+
+        .intro-btn {
+            background: #1a1a1a;
+            color: #ffffff;
+            border: 2px solid #1a1a1a;
+            padding: 16px 40px;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            letter-spacing: 2.5px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .intro-btn:hover, .intro-btn:active {
+            background: #d4af37;
+            border-color: #d4af37;
+            color: #ffffff;
+            transform: scale(1.05);
+            box-shadow: 0 12px 30px rgba(212, 175, 55, 0.3);
+        }
+
+        /* Controlo de Som */
+        .audio-control {
+            position: fixed;
+            top: 20px; right: 20px;
+            z-index: 50;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            padding: 8px 18px;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #1a1a1a;
+            font-size: 0.85rem;
+            font-family: 'Cormorant Garamond', serif;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+            transition: all 0.3s ease;
+        }
+
+        /* Container Principal */
+        .main-container {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 620px;
+            margin: 20px auto;
+        }
+
+        .card-box {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid #f1f1f1;
+            border-radius: 16px;
+            padding: 40px 25px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.05);
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        /* Ilustração Fiel do Pequeno Príncipe */
+        .prince-stage {
+            width: 240px;
+            height: 220px;
+            margin: 0 auto 10px auto;
+            position: relative;
+        }
+
+        .prince-svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 5px 15px rgba(212, 175, 55, 0.2));
+            animation: floatPrince 4s infinite ease-in-out;
+        }
+
+        @keyframes floatPrince {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        /* Envelope */
+        .envelope-container {
+            margin: 30px 0 15px 0;
+            cursor: pointer;
+        }
+
+        .envelope-cover {
+            background: #ffffff;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 35px 20px;
+            transition: all 0.4s ease;
+            position: relative;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.03);
+        }
+
+        .envelope-cover:hover {
+            border-color: #d4af37;
+            box-shadow: 0 12px 35px rgba(212, 175, 55, 0.18);
+            transform: translateY(-3px);
+        }
+
+        .recipient-label {
+            font-size: 0.75rem;
+            letter-spacing: 3px;
+            color: #94a3b8;
+            text-transform: uppercase;
+        }
+
+        .recipient-name {
+            font-family: 'Alex Brush', cursive;
+            font-size: 4.5rem;
+            color: #1a1a1a;
+            margin: 5px 0;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .wax-seal {
+            width: 48px;
+            height: 48px;
+            background: #d4af37;
+            border-radius: 50%;
+            margin: 10px auto 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4);
+            color: #ffffff;
+            font-size: 1.3rem;
+            border: 2px solid #fef08a;
+        }
+
+        .open-btn {
+            background: #1a1a1a;
+            color: #ffffff;
+            border: none;
+            padding: 14px 36px;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.05rem;
+            font-weight: 600;
+            letter-spacing: 2px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+        }
+
+        .open-btn:hover, .open-btn:active {
+            background: #d4af37;
+            color: #ffffff;
+            transform: scale(1.04);
+            box-shadow: 0 8px 25px rgba(212, 175, 55, 0.3);
+        }
+
+        /* Carta Expansível */
+        .letter-content {
+            display: none;
+            opacity: 0;
+            background: #fffdf9;
+            color: #2c2c2c;
+            padding: 45px 30px;
+            border: 1px solid #e8e4d9;
+            border-radius: 12px;
+            margin-top: 25px;
+            text-align: left;
+            position: relative;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.06);
+        }
+
+        .letter-content.active {
+            display: block;
+            animation: fadeIn 0.8s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Selo Postal */
+        .stamp-holder {
+            position: absolute;
+            top: 25px; right: 25px;
+            width: 75px; height: 95px;
+            background: #ffffff;
+            border: 2px dashed #cbd5e1;
+            padding: 4px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+            transform: rotate(3deg);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stamp-holder img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .poem-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 25px;
+            border-bottom: 1px solid #e8e4d9;
+            padding-bottom: 10px;
+            width: 60%;
+        }
+
+        .poem-body {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.2rem;
+            line-height: 1.9;
+            color: #2a2a2a;
+        }
+
+        .poem-body p {
+            margin-bottom: 18px;
+        }
+
+        .signature {
+            margin-top: 35px;
+            font-family: 'Alex Brush', cursive;
+            font-size: 2.5rem;
+            color: #1a1a1a;
+            text-align: right;
+        }
+
+        @media (max-width: 600px) {
+            .intro-title { font-size: 4rem; }
+            .recipient-name { font-size: 3.5rem; }
+            .letter-content { padding: 30px 20px; }
+            .stamp-holder { width: 60px; height: 80px; top: 15px; right: 15px; }
+            .poem-title { width: 50%; font-size: 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Canvas de Efeitos Globais -->
+    <canvas id="effects-canvas"></canvas>
+
+    <!-- Ecrã de Entrada -->
+    <div id="intro-screen">
+        <div class="intro-title">Ester</div>
+        <div class="intro-subtitle">Um refúgio no Asteroide B-612</div>
+        <button class="intro-btn" id="start-btn">Entrar</button>
+    </div>
+
+    <!-- Controlo de Áudio -->
+    <div class="audio-control" id="audio-toggle">
+        <span id="audio-icon">🎵</span>
+        <span id="audio-text">Música</span>
+    </div>
+
+    <!-- Áudio Protegido -->
+    <audio id="bg-music" loop preload="none">
+        <source src="musica.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- Conteúdo Principal -->
+    <div class="main-container">
+        <div class="card-box">
+            
+            <!-- Desenho 100% Fiel do Pequeno Príncipe da Ilustração Original -->
+            <div class="prince-stage">
+                <svg class="prince-svg" viewBox="0 0 200 220">
+                    <!-- Espada Clássica -->
+                    <path d="M 148 140 L 140 200" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"/>
+                    <path d="M 142 140 C 150 135, 155 145, 148 150 Z" fill="#cbd5e1" stroke="#64748b" stroke-width="1"/>
+
+                    <!-- Casaco Verde Clássico com Forro Vermelho -->
+                    <path d="M 60 80 L 140 80 L 160 200 C 130 210, 70 210, 40 200 Z" fill="#e11d48"/> <!-- Forro vermelho -->
+                    <path d="M 55 80 L 100 85 L 82 205 L 38 195 Z" fill="#15803d"/> <!-- Aba Esquerda Verde -->
+                    <path d="M 145 80 L 100 85 L 118 205 L 162 195 Z" fill="#15803d"/> <!-- Aba Direita Verde -->
+
+                    <!-- Calças Brancas e Cinto Dourado -->
+                    <path d="M 85 130 L 115 130 L 118 190 L 82 190 Z" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+                    <rect x="85" y="125" width="30" height="10" fill="#f59e0b" rx="2"/>
+
+                    <!-- Estrelas Douradas nas Hombreiras -->
+                    <path d="M 68 75 L 70 78 L 74 78 L 71 80 L 72 84 L 68 82 L 64 84 L 65 80 L 62 78 L 66 78 Z" fill="#fbbf24"/>
+                    <path d="M 132 75 L 134 78 L 138 78 L 135 80 L 136 84 L 132 82 L 128 84 L 129 80 L 126 78 L 130 78 Z" fill="#fbbf24"/>
+
+                    <!-- Camisa Branca e Flor Gravata -->
+                    <path d="M 88 80 L 112 80 L 108 125 L 92 125 Z" fill="#ffffff"/>
+                    <circle cx="100" cy="92" r="7" fill="#64748b"/>
+                    <circle cx="100" cy="92" r="4" fill="#94a3b8"/>
+
+                    <!-- Cabeça, Cabelo Ruivo/Loiro Desarrumado e Rosto Fiel -->
+                    <circle cx="100" cy="52" r="16" fill="#fde047"/>
+                    <!-- Cabelo em Espetos Fiel à Fotografia -->
+                    <path d="M 82 50 C 75 35, 90 20, 98 22 C 105 18, 120 28, 118 48 C 122 35, 110 20, 98 22 Z" fill="#f97316"/>
+                    <path d="M 85 45 C 80 30, 95 18, 102 24 C 112 15, 122 30, 115 48 Z" fill="#fbbf24"/>
+                    
+                    <!-- Olhos de Pontinhos e Sobrancelhas Tristes/Expressivas -->
+                    <circle cx="93" cy="55" r="1.8" fill="#1e293b"/>
+                    <circle cx="107" cy="55" r="1.8" fill="#1e293b"/>
+                    <path d="M 90 50 Q 93 48 96 51" stroke="#1e293b" stroke-width="1" fill="none"/>
+                    <path d="M 104 51 Q 107 48 110 50" stroke="#1e293b" stroke-width="1" fill="none"/>
+                </svg>
+            </div>
+
+            <h2 style="font-family: 'Cormorant Garamond', serif; color: #1a1a1a; font-size: 1.45rem; font-weight: 700;">
+                Para os teus dias cinzentos
+            </h2>
+            <p style="color: #777; font-size: 0.85rem; margin-top: 4px; font-style: italic;">
+                Uma mensagem guardada entre as estrelas.
+            </p>
+
+            <!-- Envelope -->
+            <div class="envelope-container" id="envelope">
+                <div class="envelope-cover">
+                    <div class="recipient-label">Para</div>
+                    <div class="recipient-name">Ester</div>
+                    <div class="wax-seal">🌹</div>
+                </div>
+            </div>
+
+            <button class="open-btn" id="open-btn">Abrir a Carta</button>
+
+            <!-- Carta Revelada -->
+            <div class="letter-content" id="letter">
+                <!-- Selo Postal com Foto da Ester -->
+                <div class="stamp-holder">
+                    <img src="foto_ester.jpg" alt="Ester" onerror="this.style.display='none'; this.parentElement.innerHTML='<span style=\'font-size:1.5rem;\'>🌹</span>';">
+                </div>
+
+                <div class="poem-title">Entre Estrelas e Rosas</div>
+
+                <div class="poem-body">
+                    <p>Ester,</p>
+
+                    <p>Sei que há dias em que o céu parece pesado demais e que o mundo lá fora cobra certezas que nem tu própria tens. Mas lembra-te: no teu próprio universo, tu não precisas de carregar tudo sozinha.</p>
+
+                    <p>Tu és como a rosa do Pequeno Príncipe — única no mundo, valiosa e cheia de uma luz que nenhum dia escuro consegue apagar. As tuas incertezas não te diminuem, e os teus momentos de silêncio não anulam a tua força.</p>
+
+                    <p>Não tenhas pressa de resolver o amanhã. Permite-te respirar, viver o agora e deixar que a vida flua no seu próprio tempo. E quando os teus passos parecerem pesados, lembra-te de que haverá sempre alguém ao teu lado, pronto para colocar o peito à frente, te proteger e ser o teu refúgio.</p>
+
+                    <p>Tu nunca estarás só.</p>
+                </div>
+
+                <div class="signature">Com carinho e proteção.</div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // --- SCRIPT DE INTERAÇÃO ULTRA SEGURO ---
+
+        // 1. Canvas de Partículas Brilhantes e Interativas
+        const canvas = document.getElementById('effects-canvas');
+        const ctx = canvas.getContext('2d');
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+
+        window.addEventListener('resize', () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        });
+
+        const particles = [];
+        for (let i = 0; i < 60; i++) {
+            particles.push({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                r: Math.random() * 2.5 + 1,
+                color: Math.random() > 0.3 ? '#d4af37' : '#f43f5e',
+                vx: (Math.random() - 0.5) * 0.5,
+                vy: Math.random() * 0.5 + 0.2,
+                alpha: Math.random()
+            });
+        }
+
+        function animateCanvas() {
+            ctx.clearRect(0, 0, width, height);
+            particles.forEach(p => {
+                p.y += p.vy;
+                p.x += p.vx;
+                if (p.y > height) p.y = 0;
+                if (p.x > width || p.x < 0) p.x = Math.random() * width;
+
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = p.alpha;
+                ctx.fill();
+            });
+            requestAnimationFrame(animateCanvas);
+        }
+        animateCanvas();
+
+        // 2. Lógica de Clique sem Riscos de Travar
+        const introScreen = document.getElementById('intro-screen');
+        const startBtn = document.getElementById('start-btn');
+        const bgMusic = document.getElementById('bg-music');
+        const audioToggle = document.getElementById('audio-toggle');
+        const audioIcon = document.getElementById('audio-icon');
+        const envelope = document.getElementById('envelope');
+        const openBtn = document.getElementById('open-btn');
+        const letter = document.getElementById('letter');
+
+        let isPlaying = false;
+
+        // Entrar no site
+        function enterSite() {
+            introScreen.classList.add('hidden');
+            
+            // Tentativa de tocar áudio protegida contra erros
+            try {
+                bgMusic.play().then(() => {
+                    isPlaying = true;
+                    audioIcon.textContent = '🎵';
+                }).catch(e => {
+                    console.log("Áudio não encontrado ou bloqueado pelo navegador.");
+                    isPlaying = false;
+                    audioIcon.textContent = '🔇';
+                });
+            } catch (err) {
+                console.log("Erro de áudio ignorado para não travar o site.");
+            }
+        }
+
+        startBtn.addEventListener('click', enterSite);
+
+        // Toggle Áudio
+        audioToggle.addEventListener('click', () => {
+            try {
+                if (isPlaying) {
+                    bgMusic.pause();
+                    isPlaying = false;
+                    audioIcon.textContent = '🔇';
+                } else {
+                    bgMusic.play().then(() => {
+                        isPlaying = true;
+                        audioIcon.textContent = '🎵';
+                    }).catch(() => {
+                        alert("Certifica-te de ter o arquivo musica.mp3 na mesma pasta!");
+                    });
+                }
+            } catch(e) {}
+        });
+
+        // Abrir Carta
+        function openLetter() {
+            letter.classList.add('active');
+            openBtn.style.display = 'none';
+            letter.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        envelope.addEventListener('click', openLetter);
+        openBtn.addEventListener('click', openLetter);
+    </script>
+</body>
+</html>
