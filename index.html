@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HORIZON BRAZIL | PHACAL BRAZIL</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- PeerJS CDN -->
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        wall: {
+                            950: '#000000',
+                            900: '#060608',
+                            850: '#0a0a0d',
+                            800: '#111116',
+                            750: '#181820',
+                            700: '#22222d',
+                            600: '#2f2f3d'
+                        },
+                        horizon: {
+                            cyan: '#00f2fe',
+                            blue: '#4facfe',
+                            purple: '#7f00ff',
+                            emerald: '#10b981',
+                            rose: '#f43f5e'
+                        }
+                    },
+                    boxShadow: {
+                        'wall-glow': '0 0 40px rgba(0, 242, 254, 0.12)',
+                        'purple-glow': '0 0 35px rgba(127, 0, 255, 0.25)',
+                        'emerald-glow': '0 0 20px rgba(16, 185, 129, 0.3)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+        
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #000000;
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+
+        /* Wall Black Glassmorphism */
+        .wall-glass {
+            background: rgba(10, 10, 13, 0.88);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .wall-glass-card {
+            background: rgba(17, 17, 22, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #000000;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1f1f2b;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #00f2fe;
+        }
+
+        /* Fullscreen Video styling */
+        .fullscreen-target:-webkit-full-screen {
+            width: 100vw !important;
+            height: 100vh !important;
+            background-color: #000000 !important;
+        }
+        .fullscreen-target:fullscreen {
+            width: 100vw !important;
+            height: 100vh !important;
+            background-color: #000000 !important;
+        }
+
+        /* Audio Equalizer Bar Animation */
+        .eq-bar {
+            width: 3px;
+            background: #00f2fe;
+            border-radius: 4px;
+            animation: eqBounce 1.2s infinite ease-in-out;
+        }
+        .eq-bar:nth-child(1) { height: 30%; animation-delay: 0.1s; }
+        .eq-bar:nth-child(2) { height: 80%; animation-delay: 0.3s; }
+        .eq-bar:nth-child(3) { height: 100%; animation-delay: 0.2s; }
+        .eq-bar:nth-child(4) { height: 40%; animation-delay: 0.4s; }
+
+        @keyframes eqBounce {
+            0%, 100% { transform: scaleY(0.3); }
+            50% { transform: scaleY(1); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between bg-black relative selection:bg-horizon-cyan selection:text-black">
+
+    <!-- Ambient Neon Glowing Accents -->
+    <div class="fixed top-0 left-1/3 w-[500px] h-[500px] bg-horizon-cyan/5 rounded-full blur-[150px] pointer-events-none"></div>
+    <div class="fixed bottom-0 right-1/3 w-[500px] h-[500px] bg-horizon-purple/5 rounded-full blur-[150px] pointer-events-none"></div>
+
+    <header class="wall-glass sticky top-0 z-40 px-4 lg:px-8 py-3.5 border-b border-white/10 flex items-center justify-between">
+        <div class="flex items-center gap-3.5">
+            <div class="p-2.5 bg-gradient-to-tr from-horizon-purple to-horizon-cyan rounded-xl shadow-purple-glow flex items-center justify-center text-black">
+                <i data-lucide="tv" class="w-5 h-5 stroke-[2.5]"></i>
+            </div>
+            <div>
+                <div class="flex items-center gap-2">
+                    <h1 class="text-base sm:text-lg font-black tracking-wider text-white uppercase">
+                        HORIZON <span class="bg-gradient-to-r from-horizon-cyan via-horizon-blue to-horizon-purple bg-clip-text text-transparent">BRAZIL</span>
+                    </h1>
+                    <span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-horizon-cyan/10 text-horizon-cyan border border-horizon-cyan/30 tracking-widest uppercase">
+                        PHACAL BRAZIL
+                    </span>
+                </div>
+                <p class="text-[11px] text-slate-400 flex items-center gap-1.5 font-medium mt-0.5">
+                    <span id="connectionDot" class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                    <span id="connectionStatusText">Iniciando Servidor WebRTC...</span>
+                </p>
+            </div>
+        </div>
+
+        <!-- Room ID Bar & Quick Action Button -->
+        <div class="flex items-center gap-2 sm:gap-3">
+            <div class="hidden sm:flex items-center gap-2 bg-wall-950 border border-white/10 px-3 py-1.5 rounded-xl text-xs font-mono">
+                <span class="text-slate-500">Sua ID:</span>
+                <span id="headerPeerIdDisplay" class="text-horizon-cyan font-bold">Carregando...</span>
+                <button id="btnCopyHeaderId" class="hover:text-white text-slate-400 ml-1 transition" title="Copiar ID">
+                    <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                </button>
+            </div>
+
+            <button id="btnOpenConnectModal" class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-white bg-wall-800 border border-white/10 hover:border-horizon-cyan hover:text-horizon-cyan transition flex items-center gap-2 shadow-sm">
+                <i data-lucide="link" class="w-3.5 h-3.5 text-horizon-cyan"></i>
+                <span>Conectar Par</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-1 p-3 sm:p-5 lg:p-6 max-w-[1920px] w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+
+        <!-- LEFT SECTION: Main Cinema & Stream Player Container (8/12 or 9/12) -->
+        <section class="lg:col-span-8 xl:col-span-9 flex flex-col gap-4">
+
+            <!-- Primary Screen Container -->
+            <div id="videoContainer" class="fullscreen-target relative group aspect-video bg-wall-950 rounded-2xl overflow-hidden border border-white/10 shadow-wall-glow flex items-center justify-center">
+                
+                <!-- Incoming Peer Stream Video -->
+                <video id="remoteVideo" class="w-full h-full object-contain hidden" autoplay playsinline></video>
+                
+                <!-- Local Screen Share Stream Video -->
+                <video id="localVideo" class="w-full h-full object-contain hidden" autoplay playsinline muted></video>
+
+                <!-- Local File / Direct Video Player -->
+                <video id="localFileVideo" class="w-full h-full object-contain hidden" controls playsinline></video>
+
+                <!-- Hidden audio tag for receiving high-fidelity peer voice/audio -->
+                <audio id="remoteAudio" autoplay></audio>
+
+                <!-- Placeholder Screen when no transmission is active -->
+                <div id="screenPlaceholder" class="flex flex-col items-center justify-center p-6 text-center max-w-xl">
+                    <div class="relative mb-5">
+                        <div class="w-20 h-20 rounded-2xl bg-gradient-to-tr from-wall-800 to-wall-700 border border-white/10 flex items-center justify-center text-horizon-cyan shadow-purple-glow">
+                            <i data-lucide="monitor-play" class="w-10 h-10"></i>
+                        </div>
+                        <div class="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-horizon-cyan/20 border border-horizon-cyan flex items-center justify-center text-horizon-cyan">
+                            <i data-lucide="wifi" class="w-3.5 h-3.5"></i>
+                        </div>
+                    </div>
+                    
+                    <h2 class="text-xl font-bold text-white tracking-wide mb-2">HORIZON BRAZIL STREAMING</h2>
+                    <p class="text-xs text-slate-400 mb-6 leading-relaxed">
+                        Transmita sua tela com áudio do sistema ativado ou abra um arquivo de vídeo local para assistirem à vossa série juntos em alta definição e com chamada de voz.
+                    </p>
+
+                    <!-- Main Action Buttons on Screen -->
+                    <div class="flex flex-wrap items-center justify-center gap-3">
+                        <button id="btnMainShareScreen" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-horizon-cyan via-horizon-blue to-horizon-purple text-black text-xs font-extrabold tracking-wide shadow-purple-glow hover:opacity-90 transition flex items-center gap-2">
+                            <i data-lucide="screen-share" class="w-4 h-4 stroke-[2.5]"></i>
+                            <span>Transmitir Minha Tela (Com Áudio)</span>
+                        </button>
+
+                        <label for="localFileInput" class="px-5 py-2.5 rounded-xl bg-wall-800 border border-white/10 text-white text-xs font-bold hover:border-horizon-cyan hover:text-horizon-cyan transition cursor-pointer flex items-center gap-2">
+                            <i data-lucide="file-video" class="w-4 h-4 text-horizon-cyan"></i>
+                            <span>Abrir Vídeo Local (.mp4/.mkv)</span>
+                        </label>
+                        <input type="file" id="localFileInput" accept="video/*" class="hidden">
+                    </div>
+                </div>
+
+                <!-- Floating Stream Status Overlay -->
+                <div class="absolute top-4 left-4 z-20 flex items-center gap-2">
+                    <div class="px-3 py-1.5 rounded-xl bg-wall-900/80 border border-white/10 backdrop-blur-md flex items-center gap-2 text-xs text-slate-300 font-medium">
+                        <span id="streamStatusDot" class="w-2 h-2 rounded-full bg-slate-500"></span>
+                        <span id="streamStatusText">Nenhuma Transmissão Ativa</span>
+                    </div>
+                </div>
+
+                <!-- Floating Fullscreen Button Overlay -->
+                <div class="absolute top-4 right-4 z-20 flex items-center gap-2 opacity-90 group-hover:opacity-100 transition duration-200">
+                    <button id="btnOverlayFullscreen" class="p-2.5 rounded-xl bg-wall-900/90 border border-white/10 text-white hover:border-horizon-cyan hover:text-horizon-cyan transition backdrop-blur-md" title="Tela Cheia (Fullscreen)">
+                        <i data-lucide="maximize" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+                <!-- Voice Active Indicator Badge -->
+                <div id="voiceBadge" class="absolute bottom-4 left-4 z-20 hidden px-3 py-1.5 rounded-xl bg-wall-900/90 border border-white/10 backdrop-blur-md flex items-center gap-2 text-xs text-slate-300">
+                    <div class="flex items-center gap-1 h-3">
+                        <div class="eq-bar"></div>
+                        <div class="eq-bar"></div>
+                        <div class="eq-bar"></div>
+                        <div class="eq-bar"></div>
+                    </div>
+                    <span id="voiceBadgeText" class="text-[11px] font-semibold text-horizon-cyan">Voz Ativa</span>
+                </div>
+            </div>
+
+            <div class="wall-glass p-3.5 sm:p-4 rounded-2xl flex flex-wrap items-center justify-between gap-4">
+                
+                <!-- Transmission Controls -->
+                <div class="flex items-center gap-2.5">
+                    <button id="btnBarShareScreen" class="px-4 py-2.5 rounded-xl bg-wall-800 border border-white/10 hover:border-horizon-cyan text-xs font-semibold text-white transition flex items-center gap-2">
+                        <i data-lucide="monitor" class="w-4 h-4 text-horizon-cyan"></i>
+                        <span id="btnBarShareText">Espelhar Tela</span>
+                    </button>
+
+                    <button id="btnBarFullscreen" class="px-4 py-2.5 rounded-xl bg-wall-800 border border-white/10 hover:border-white text-xs font-semibold text-white transition flex items-center gap-2">
+                        <i data-lucide="expand" class="w-4 h-4 text-slate-400"></i>
+                        <span>Tela Cheia</span>
+                    </button>
+                </div>
+
+                <!-- Voice Call Controls (Discord-style) -->
+                <div class="flex items-center gap-3 bg-wall-950 p-1.5 rounded-2xl border border-white/10 shadow-inner">
+                    <!-- Toggle Microphone -->
+                    <button id="btnToggleMic" class="p-3 rounded-xl bg-rose-500/20 text-rose-400 border border-rose-500/30 hover:bg-rose-500/30 transition flex items-center justify-center" title="Ligar/Desligar Microfone">
+                        <i data-lucide="mic-off" class="w-5 h-5"></i>
+                    </button>
+
+                    <!-- Toggle Peer Sound Output -->
+                    <button id="btnTogglePeerAudio" class="p-3 rounded-xl bg-wall-800 text-horizon-cyan hover:text-white hover:bg-wall-700 transition flex items-center justify-center" title="Mutar/Desmutar Som Recebido">
+                        <i data-lucide="volume-2" class="w-5 h-5"></i>
+                    </button>
+
+                    <!-- Peer Volume Slider -->
+                    <div class="hidden sm:flex items-center gap-2 px-2">
+                        <i data-lucide="sliders" class="w-3.5 h-3.5 text-slate-500"></i>
+                        <input type="range" id="volumeControl" min="0" max="1" step="0.05" value="1" class="w-20 h-1 bg-wall-700 rounded-lg appearance-none cursor-pointer accent-horizon-cyan">
+                    </div>
+                </div>
+
+                <!-- App Identity Tag -->
+                <div class="hidden sm:flex items-center gap-2">
+                    <span class="text-[11px] font-black text-slate-500 uppercase tracking-widest">PHACAL BRAZIL</span>
+                </div>
+            </div>
+
+        </section>
+
+        <section class="lg:col-span-4 xl:col-span-3 h-[520px] lg:h-[calc(100vh-140px)] flex flex-col gap-4">
+            
+            <div class="wall-glass flex-1 rounded-2xl flex flex-col overflow-hidden border border-white/10">
+                
+                <!-- Chat Panel Header -->
+                <div class="p-3.5 border-b border-white/10 bg-wall-950/80 flex items-center justify-between">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-2.5 h-2.5 rounded-full bg-horizon-cyan shadow-wall-glow"></div>
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-white">Chat ao Vivo</h3>
+                    </div>
+                    
+                    <!-- Quick Reaction Emojis -->
+                    <div class="flex items-center gap-1.5">
+                        <button class="btn-emoji hover:scale-125 transition text-base" data-emoji="🍿">🍿</button>
+                        <button class="btn-emoji hover:scale-125 transition text-base" data-emoji="❤️">❤️</button>
+                        <button class="btn-emoji hover:scale-125 transition text-base" data-emoji="🔥">🔥</button>
+                        <button class="btn-emoji hover:scale-125 transition text-base" data-emoji="😂">😂</button>
+                    </div>
+                </div>
+
+                <!-- Chat Feed -->
+                <div id="chatFeed" class="flex-1 p-3.5 overflow-y-auto flex flex-col gap-3 text-xs">
+                    <div class="p-3 rounded-xl bg-wall-900 border border-white/5 text-slate-400 text-center leading-relaxed">
+                        <p class="text-[11px] font-bold text-horizon-cyan mb-1">HORIZON BRAZIL ROOM</p>
+                        <p class="text-[10px]">Conecte a ID do seu parceiro para iniciarem o chat ao vivo e a transmissão de séries.</p>
+                    </div>
+                </div>
+
+                <!-- Chat Input Form -->
+                <form id="chatForm" class="p-3 border-t border-white/10 bg-wall-950/80 flex items-center gap-2">
+                    <input type="text" id="chatInput" placeholder="Escreva uma mensagem..." class="flex-1 bg-wall-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-horizon-cyan">
+                    <button type="submit" class="p-2.5 rounded-xl bg-gradient-to-r from-horizon-cyan to-horizon-blue text-black font-bold hover:opacity-90 transition">
+                        <i data-lucide="send" class="w-3.5 h-3.5 stroke-[2.5]"></i>
+                    </button>
+                </form>
+
+            </div>
+
+            <!-- Branding Footer Card -->
+            <div class="wall-glass p-3 rounded-xl border border-white/5 bg-gradient-to-r from-wall-900 to-black text-xs flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="shield-check" class="w-4 h-4 text-horizon-cyan"></i>
+                    <span class="text-[11px] font-bold text-slate-300">PHACAL BRAZIL SYSTEM</span>
+                </div>
+                <span class="text-[9px] px-2 py-0.5 rounded bg-white/5 text-slate-500 font-mono">v3.0</span>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Connection Modal -->
+    <div id="connectModal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="wall-glass max-w-md w-full rounded-2xl p-6 border border-white/10 shadow-wall-glow relative">
+            <button id="btnCloseConnectModal" class="absolute top-4 right-4 p-1 text-slate-400 hover:text-white">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+
+            <div class="flex items-center gap-3 mb-5">
+                <div class="p-2.5 rounded-xl bg-horizon-cyan/10 text-horizon-cyan">
+                    <i data-lucide="radio" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-bold text-white">Conectar ao Par</h3>
+                    <p class="text-xs text-slate-400">Insira a ID do seu parceiro para iniciar a sessão</p>
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Sua ID de Conexão:</label>
+                    <div class="flex items-center gap-2">
+                        <input type="text" id="modalMyPeerId" readonly class="flex-1 bg-wall-950 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono text-horizon-cyan focus:outline-none">
+                        <button id="btnCopyModalId" class="p-2 rounded-xl bg-wall-800 text-slate-300 hover:text-white border border-white/10 text-xs font-semibold">
+                            Copiar
+                   
