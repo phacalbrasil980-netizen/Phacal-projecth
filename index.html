@@ -1,0 +1,433 @@
+```html
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aniversário da Ester - Contagem Regressiva Especial</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Fontes Google para Tipografia Elegante -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@600;700&family=Great+Vibes&family=Montserrat:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome para Ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        roseGold: '#B86B77',
+                        goldAccent: '#DFBA73',
+                        deepBurgundy: '#2C0B12',
+                        blushPink: '#FDF2F4',
+                        darkVelvet: '#120508'
+                    },
+                    fontFamily: {
+                        cursive: ['Great Vibes', 'cursive'],
+                        serifHeader: ['Cinzel Decorative', 'serif'],
+                        serifBody: ['Playfair Display', 'serif'],
+                        sans: ['Montserrat', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Estilos Personalizados e Animações Fine-Tuned */
+        body {
+            background: linear-gradient(135deg, #0d0305 0%, #1e070c 50%, #2b0c13 100%);
+            color: #fce8eb;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* Efeito Glassmorphism com Brilho Dourado */
+        .glass-card {
+            background: rgba(35, 10, 16, 0.55);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(223, 186, 115, 0.25);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), 
+                        inset 0 0 15px rgba(223, 186, 115, 0.08);
+        }
+
+        /* Molduras Elegantes */
+        .gold-border-glow {
+            box-shadow: 0 0 20px rgba(223, 186, 115, 0.2);
+            transition: all 0.4s ease;
+        }
+        .gold-border-glow:hover {
+            box-shadow: 0 0 30px rgba(223, 186, 115, 0.4);
+            border-color: rgba(223, 186, 115, 0.6);
+        }
+
+        /* Texto com Gradiente Dourado Luxuoso */
+        .gold-gradient-text {
+            background: linear-gradient(135deg, #FFF0D0 0%, #DFBA73 50%, #C59B4B 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Canvas de Fundo (Pétalas e Brilhos) */
+        #effectsCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Equalizador de Áudio Animado */
+        .bar {
+            width: 3px;
+            background: #DFBA73;
+            border-radius: 3px;
+            animation: soundWave 1.2s ease-in-out infinite alternate;
+        }
+        .bar:nth-child(1) { height: 6px; animation-delay: 0.1s; }
+        .bar:nth-child(2) { height: 16px; animation-delay: 0.3s; }
+        .bar:nth-child(3) { height: 10px; animation-delay: 0.2s; }
+        .bar:nth-child(4) { height: 20px; animation-delay: 0.4s; }
+        .bar:nth-child(5) { height: 8px; animation-delay: 0.15s; }
+
+        .paused .bar {
+            animation-play-state: paused;
+            height: 4px !important;
+        }
+
+        @keyframes soundWave {
+            0% { height: 4px; }
+            100% { height: 22px; }
+        }
+
+        /* Animação Suave de Flutuação */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(1deg); }
+        }
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0d0305;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4a131e;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="font-sans antialiased flex flex-col min-h-screen justify-between relative selection:bg-roseGold selection:text-white">
+
+    <!-- Canvas para Pétalas de Rosa e Estrelas/Fagulhas -->
+    <canvas id="effectsCanvas"></canvas>
+
+    <!-- Header Elegante com Player de Música -->
+    <header class="relative z-10 w-full px-6 py-5 flex justify-between items-center max-w-6xl mx-auto">
+        <div class="flex items-center space-x-3">
+            <span class="text-goldAccent font-serifHeader text-xl tracking-widest">E & M</span>
+            <span class="text-xs text-roseGold/60 border-l border-roseGold/30 pl-3 uppercase tracking-widest hidden sm:inline">Edição Especial</span>
+        </div>
+
+        <!-- Botão/Player de Áudio Estilizado -->
+        <div id="audioPlayerContainer" class="glass-card rounded-full px-4 py-2 flex items-center space-x-3 border border-goldAccent/30 cursor-pointer gold-border-glow transition-all">
+            <button id="playPauseBtn" class="w-8 h-8 rounded-full bg-goldAccent/20 hover:bg-goldAccent/40 flex items-center justify-center text-goldAccent transition">
+                <i id="playIcon" class="fas fa-play text-xs ml-0.5"></i>
+            </button>
+            <div class="flex flex-col pr-1">
+                <span class="text-[10px] uppercase tracking-wider text-roseGold/80">Trilha Sonora</span>
+                <span id="songTitle" class="text-xs font-serifBody text-goldAccent font-semibold">Violão Acústico</span>
+            </div>
+            <!-- Visualizador Equalizador -->
+            <div id="equalizer" class="flex items-end space-x-1 h-5 px-1 paused">
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Indicador Flutuante para Ativar Música no Primeiro Clique -->
+    <div id="musicPrompt" class="relative z-10 -mt-2 mb-2 flex justify-center">
+        <div class="bg-goldAccent/10 border border-goldAccent/30 rounded-full px-4 py-1 text-[11px] text-goldAccent animate-pulse flex items-center space-x-2">
+            <i class="fas fa-music"></i>
+            <span>Toque em qualquer lugar da tela para ouvir a música</span>
+        </div>
+    </div>
+
+    <!-- Elemento de Áudio Oculto com Violão Acústico Suave -->
+    <!-- Utiliza áudio acústico confiável ou sintetizador via Web Audio API como fallback -->
+    <audio id="bgMusic" loop preload="auto">
+        <source src="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=soft-acoustic-guitar-112682.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- Conteúdo Principal -->
+    <main class="relative z-10 flex-grow flex flex-col justify-center items-center px-4 py-8 max-w-4xl mx-auto text-center">
+        
+        <!-- Selo ou Detalhe Superior -->
+        <div class="mb-4 inline-flex items-center space-x-2 px-4 py-1.5 rounded-full border border-goldAccent/30 bg-deepBurgundy/40 backdrop-blur-md">
+            <i class="fas fa-crown text-xs text-goldAccent"></i>
+            <span class="text-xs uppercase tracking-[0.25em] text-goldAccent font-medium">Contagem Regressiva</span>
+        </div>
+
+        <!-- Título Principal -->
+        <h1 class="font-cursive text-5xl sm:text-7xl md:text-8xl gold-gradient-text drop-shadow-lg mb-2 animate-float">
+            Aniversário da Ester
+        </h1>
+        
+        <p class="font-serifBody italic text-lg sm:text-xl text-roseGold/90 max-w-xl mx-auto mb-10 font-light">
+            Celebrando a graciosidade, a beleza e a luz da sua vida.
+        </p>
+
+        <!-- Container do Timer Regressivo -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 w-full max-w-3xl mb-12">
+            <!-- Dias -->
+            <div class="glass-card gold-border-glow rounded-2xl p-4 sm:p-6 flex flex-col items-center justify-center transform hover:-translate-y-1 transition duration-300">
+                <span id="days" class="font-serifHeader text-4xl sm:text-6xl text-goldAccent font-bold tracking-tight">00</span>
+                <span class="text-xs sm:text-sm uppercase tracking-widest text-roseGold/80 mt-2 font-medium">Dias</span>
+            </div>
+            
+            <!-- Horas -->
+            <div class="glass-card gold-border-glow rounded-2xl p-4 sm:p-6 flex flex-col items-center justify-center transform hover:-translate-y-1 transition duration-300">
+                <span id="hours" class="font-serifHeader text-4xl sm:text-6xl text-goldAccent font-bold tracking-tight">00</span>
+                <span class="text-xs sm:text-sm uppercase tracking-widest text-roseGold/80 mt-2 font-medium">Horas</span>
+            </div>
+
+            <!-- Minutos -->
+            <div class="glass-card gold-border-glow rounded-2xl p-4 sm:p-6 flex flex-col items-center justify-center transform hover:-translate-y-1 transition duration-300">
+                <span id="minutes" class="font-serifHeader text-4xl sm:text-6xl text-goldAccent font-bold tracking-tight">00</span>
+                <span class="text-xs sm:text-sm uppercase tracking-widest text-roseGold/80 mt-2 font-medium">Minutos</span>
+            </div>
+
+            <!-- Segundos -->
+            <div class="glass-card gold-border-glow rounded-2xl p-4 sm:p-6 flex flex-col items-center justify-center transform hover:-translate-y-1 transition duration-300">
+                <span id="seconds" class="font-serifHeader text-4xl sm:text-6xl text-goldAccent font-bold tracking-tight">00</span>
+                <span class="text-xs sm:text-sm uppercase tracking-widest text-roseGold/80 mt-2 font-medium">Segundos</span>
+            </div>
+        </div>
+
+        <!-- Card de Mensagem Especial / Carta -->
+        <div class="glass-card rounded-3xl p-6 sm:p-10 max-w-2xl w-full border border-goldAccent/20 relative overflow-hidden">
+            <div class="absolute -top-10 -right-10 w-32 h-32 bg-goldAccent/10 rounded-full blur-2xl pointer-events-none"></div>
+            <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-roseGold/10 rounded-full blur-2xl pointer-events-none"></div>
+
+            <i class="fas fa-quote-left text-2xl text-goldAccent/40 mb-4 block"></i>
+            
+            <p class="font-serifBody text-base sm:text-lg leading-relaxed text-blushPink/90 italic mb-6">
+                "Que este novo ciclo traga consigo a leveza do vento, a paz nas escolhas e a certeza de que a beleza da vida está nos pequenos detalhes do dia a dia."
+            </p>
+
+            <!-- Data Alvo Configurável -->
+            <div class="inline-flex items-center space-x-3 text-xs sm:text-sm text-goldAccent font-sans border-t border-roseGold/20 pt-4">
+                <i class="far fa-calendar-alt"></i>
+                <span id="targetDateDisplay">Data Especial Chegando</span>
+            </div>
+        </div>
+
+        <!-- Seletor de Ajuste de Data (Para personalização fácil) -->
+        <div class="mt-8">
+            <button id="configDateBtn" class="text-xs text-roseGold/50 hover:text-goldAccent transition flex items-center space-x-1 mx-auto">
+                <i class="fas fa-cog"></i>
+                <span>Ajustar Data do Aniversário</span>
+            </button>
+            <div id="datePickerModal" class="hidden mt-3 p-3 glass-card rounded-xl inline-block border border-goldAccent/30">
+                <label class="block text-xs text-roseGold mb-1">Escolha a data e hora:</label>
+                <input type="datetime-local" id="targetDateInput" class="bg-deepBurgundy/80 text-goldAccent text-xs px-3 py-1.5 rounded border border-goldAccent/40 focus:outline-none">
+                <button id="saveDateBtn" class="text-xs bg-goldAccent text-deepBurgundy font-semibold px-3 py-1.5 rounded ml-2 hover:bg-yellow-300 transition">Salvar</button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Rodapé -->
+    <footer class="relative z-10 w-full py-6 text-center text-xs text-roseGold/50 border-t border-roseGold/10">
+        <p>Feito com elegância para Ester &bull; Todos os direitos reservados</p>
+    </footer>
+
+    <!-- Scripts da Aplicação -->
+    <script>
+        /* ===================================================
+         * 1. LÓGICA DE CONTAGEM REGRESSIVA (TARGET DATE)
+         * =================================================== */
+        // Data Padrão: Aniversário da Ester no dia 2 de Novembro
+        let now = new Date();
+        let targetYear = now.getFullYear();
+        
+        // Define para 2 de Novembro do ano atual
+        let defaultDate = new Date(targetYear, 10, 2, 0, 0, 0); // Mês 10 = Novembro (0-indexed)
+
+        // Se a data de 2 de Novembro deste ano já passou, ajusta para o próximo ano
+        if (now.getTime() > defaultDate.getTime()) {
+            defaultDate = new Date(targetYear + 1, 10, 2, 0, 0, 0);
+        }
+        
+        // Verifica se há data salva no localStorage
+        let savedDate = localStorage.getItem('ester_bday_date');
+        let targetDate = savedDate ? new Date(savedDate) : defaultDate;
+
+        const daysEl = document.getElementById('days');
+        const hoursEl = document.getElementById('hours');
+        const minutesEl = document.getElementById('minutes');
+        const secondsEl = document.getElementById('seconds');
+        const targetDateDisplay = document.getElementById('targetDateDisplay');
+
+        function updateTargetDisplay() {
+            const options = { day: 'numeric', month: 'long', year: 'numeric' };
+            targetDateDisplay.textContent = targetDate.toLocaleDateString('pt-BR', options);
+        }
+
+        function updateCountdown() {
+            const now = new Date().getTime();
+            const distance = targetDate.getTime() - now;
+
+            if (distance < 0) {
+                daysEl.textContent = "00";
+                hoursEl.textContent = "00";
+                minutesEl.textContent = "00";
+                secondsEl.textContent = "00";
+                targetDateDisplay.textContent = "É HOJE! Feliz Aniversário, Ester! 🎉";
+                return;
+            }
+
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            daysEl.textContent = String(days).padStart(2, '0');
+            hoursEl.textContent = String(hours).padStart(2, '0');
+            minutesEl.textContent = String(minutes).padStart(2, '0');
+            secondsEl.textContent = String(seconds).padStart(2, '0');
+        }
+
+        updateTargetDisplay();
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
+
+        // Painel de Configuração de Data
+        const configDateBtn = document.getElementById('configDateBtn');
+        const datePickerModal = document.getElementById('datePickerModal');
+        const saveDateBtn = document.getElementById('saveDateBtn');
+        const targetDateInput = document.getElementById('targetDateInput');
+
+        configDateBtn.addEventListener('click', () => {
+            datePickerModal.classList.toggle('hidden');
+        });
+
+        saveDateBtn.addEventListener('click', () => {
+            if (targetDateInput.value) {
+                targetDate = new Date(targetDateInput.value);
+                localStorage.setItem('ester_bday_date', targetDate.toISOString());
+                updateTargetDisplay();
+                updateCountdown();
+                datePickerModal.classList.add('hidden');
+            }
+        });
+
+
+        /* ===================================================
+         * 2. CONTROLE DE ÁUDIO E TRILHA SONORA
+         * =================================================== */
+        const bgMusic = document.getElementById('bgMusic');
+        const audioPlayerContainer = document.getElementById('audioPlayerContainer');
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const playIcon = document.getElementById('playIcon');
+        const equalizer = document.getElementById('equalizer');
+
+        let isPlaying = false;
+
+        function toggleAudio() {
+            if (isPlaying) {
+                bgMusic.pause();
+                playIcon.classList.remove('fa-pause');
+                playIcon.classList.add('fa-play');
+                equalizer.classList.add('paused');
+                isPlaying = false;
+            } else {
+                startAudio();
+            }
+        }
+
+        function startAudio() {
+            bgMusic.play().then(() => {
+                playIcon.classList.remove('fa-play');
+                playIcon.classList.add('fa-pause');
+                equalizer.classList.remove('paused');
+                isPlaying = true;
+                hidePrompt();
+            }).catch(() => {
+                // Se o link externo falhar, usa o sintetizador Web Audio de violão suave
+                playSyntheticGuitar();
+                playIcon.classList.remove('fa-play');
+                playIcon.classList.add('fa-pause');
+                equalizer.classList.remove('paused');
+                isPlaying = true;
+                hidePrompt();
+            });
+        }
+
+        function hidePrompt() {
+            const prompt = document.getElementById('musicPrompt');
+            if (prompt) prompt.style.display = 'none';
+        }
+
+        // Tenta tocar automaticamente logo na carga
+        window.addEventListener('load', () => {
+            bgMusic.play().then(() => {
+                isPlaying = true;
+                playIcon.classList.remove('fa-play');
+                playIcon.classList.add('fa-pause');
+                equalizer.classList.remove('paused');
+                hidePrompt();
+            }).catch(() => {
+                // Se o navegador bloquear o autoplay sem interação, aguarda o primeiro clique na página
+                const enableAudioOnUserInteraction = () => {
+                    if (!isPlaying) {
+                        startAudio();
+                    }
+                    window.removeEventListener('click', enableAudioOnUserInteraction);
+                    window.removeEventListener('touchstart', enableAudioOnUserInteraction);
+                };
+                window.addEventListener('click', enableAudioOnUserInteraction);
+                window.addEventListener('touchstart', enableAudioOnUserInteraction);
+            });
+        });
+
+        audioPlayerContainer.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleAudio();
+        });
+
+        /* Fallback: Sintetizador de Violão Suave usando Web Audio API */
+        let audioCtx, isSynthPlaying = false;
+        function playSyntheticGuitar() {
+            if (isSynthPlaying) return;
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            isSynthPlaying = true;
+            
+            const notes = [261.63, 329.63, 392.00, 493.88, 523.25]; // Acorde Arpejado Suave
+            let step = 0;
+
+            function playNote() {
+                if (!isSynthPlaying) return;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                
+                osc.type = 'triangle'; // Som suave lembrando instrumento acústico
+                osc.frequency.setValueAtTime(notes[step % notes.length], audioCtx
